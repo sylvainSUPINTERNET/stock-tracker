@@ -1,5 +1,7 @@
-import { StatusBar } from 'expo-status-bar';
-import { NativeBaseProvider, extendTheme, Center, Box, HStack, VStack, Text, View} from "native-base";
+import firebase from "firebase/compat";
+import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View} from "native-base";
+import { useEffect } from "react";
+import { firebaseConfig } from "./firebase/firebase";
 
 const newColorTheme = {
   brand: {
@@ -11,6 +13,32 @@ const newColorTheme = {
 const customTheme = extendTheme({ colors: newColorTheme });
 
 export default function App() {
+
+  useEffect (() => {
+    firebase.initializeApp(firebaseConfig);
+    firebase.firestore().collection("users").add({
+      "name": "toto"
+    })
+    // const usersRef = firebase.database().ref('users');
+
+    // // Generate a unique key for the new user
+    // const newUserKey = usersRef.push().key;
+    
+    // // Create the user object with the name "toto"
+    // const user = {
+    //   name: 'toto'
+    // };
+    
+    // // Set the user object at the generated key
+    // usersRef.child(newUserKey!).set(user)
+    //   .then(() => {
+    //     console.log('User inserted successfully!');
+    //   })
+    //   .catch((error:any) => {
+    //     console.error('Error inserting user:', error);
+    //   });
+  });
+
   return (
     <NativeBaseProvider theme={customTheme}>
 
