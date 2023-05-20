@@ -1,8 +1,9 @@
 import firebase from "firebase/compat";
-import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View} from "native-base";
-import { useEffect } from "react";
+import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View, FormControl, Stack, Input, Container, Button, Icon} from "native-base";
+import React, { useEffect } from "react";
 import { firebaseConfig } from "./firebase/firebase";
-
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 const newColorTheme = {
   brand: {
     900: "#8287af",
@@ -12,13 +13,26 @@ const newColorTheme = {
 };
 const customTheme = extendTheme({ colors: newColorTheme });
 
+const addStock = (ev:any) => {
+  console.log("addstock");
+}
+
 export default function App() {
 
   useEffect (() => {
+
+
     firebase.initializeApp(firebaseConfig);
-    firebase.firestore().collection("users").add({
-      "name": "toto"
-    })
+
+    // firebase.firestore().collection("users").add({
+    //   "name": "toto"
+    // })
+
+    firebase
+    .firestore()
+    .collection("XDe")
+    .doc("TOTO").collection("stocks").add({ name: "toto" });
+
     // const usersRef = firebase.database().ref('users');
 
     // // Generate a unique key for the new user
@@ -46,13 +60,36 @@ export default function App() {
 
       <View style={{marginTop: 35}}>
 
-        <HStack>
-          <Box flex={1} bg={"amber.100"} style={{"padding": 20}}>
+      <LinearGradient colors={['#8EC5FC', '#E0C3FC', '#FF8EF7']}>
+        <Box style={{ padding: 20 }}>
             <Center>
-              <Text fontSize="4xl" >STOCK TRACKER</Text>
+              <Text fontSize="4xl" style={{fontWeight:"bold", color:"#fff"}}>STOCK TRACKER</Text>
             </Center>
-          </Box>
-        </HStack>
+        </Box>
+      </LinearGradient>
+
+
+      <Box style={{display:"flex", justifyContent: "center", marginTop: 20}}>
+        <Button style={{"marginRight": 80, marginLeft: 80}} variant="outline" onPress={addStock} colorScheme="secondary">
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Icon as={Ionicons} name="add" color={"purple.900"} size={6}/>
+            <Text style={{ fontSize: 16, color: 'purple', fontWeight: 'bold', marginLeft: 3 }}>
+              STOCK
+            </Text>
+          </View>
+        </Button>
+      </Box>
+
+
+
+
+      {/* <Box>
+        <Stack style={{marginRight:50, marginLeft:50, marginTop:40, marginBottom:40}}>
+            <FormControl>
+              <Input variant="outline" placeholder="Action name" style={{fontSize:26}}/>
+            </FormControl>
+        </Stack>
+      </Box> */}
 
       </View>
 
