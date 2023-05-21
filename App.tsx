@@ -15,7 +15,36 @@ const newColorTheme = {
 const customTheme = extendTheme({ colors: newColorTheme });
 
 
+
+const getCurrentPriceWorth = async (symbol:string) => {
+  const resp = await fetch(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`);
+  const data = await resp.json();
+  const priceOfStock = data.quoteSummary.result[0].price.regularMarketPrice.raw;
+  return priceOfStock;
+}
+
+
+
+
 export default function App() {
+
+
+  const addCurrentStockWorth = async ( querySnapshot:QuerySnapshot<DocumentData> ) => {
+
+    let investments = [...querySnapshot.docs.map( (doc:any) => doc.data())];
+  
+    const updatedList = [...investments]; // Create a copy of the array
+    for (let i = 0; i < updatedList.length; i++) {
+      const stock = updatedList[i];
+      const resp = await fetch(stock.urlTrackDetail);
+      const data = await resp.json();
+      const currentPriceOfStock = data.quoteSummary.result[0].price.regularMarketPrice.raw;
+      updatedList[i] = { ...stock, currentPriceOfStock }; // Update the desired element
+    }
+  
+    setListInvestments(updatedList); // Set the state with the updated copy
+  }
+  
 
   const toast = useToast();
 
@@ -54,10 +83,14 @@ export default function App() {
     try {
       const symbol = stockName.toUpperCase();
 
+      console.log(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`)
+      const priceOfStock = await getCurrentPriceWorth(symbol);
+
       await firebase.firestore()
       .collection("investments")
       .doc(stockName)
       .set({
+        priceOfStock, // when bought
         stockName: symbol,
         investAmount: toInvest,
         urlTrackDetail: `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`
@@ -70,12 +103,12 @@ export default function App() {
 
         setShowModal(false);
         setJustSubmited(undefined);
+
         const querySnapshot = await firebase.firestore().collection("investments").get();
-        setListInvestments([...querySnapshot.docs.map( (doc:any) => doc.data())])
+        await addCurrentStockWorth(querySnapshot)
       }, 1500);
 
     } catch ( error ) {
-      console.log(error);
       toast.show({
         title: "Error",
         description: "Error while adding stock : " + error
@@ -111,7 +144,9 @@ export default function App() {
     const fetchData = async () => {
       try {
         const querySnapshot = await firebase.firestore().collection("investments").get();
-        setListInvestments([...querySnapshot.docs.map( (doc:any) => doc.data())])
+        addCurrentStockWorth(querySnapshot)
+
+
       } catch ( e ) {
         toast.show({
           title: "Error",
@@ -193,9 +228,26 @@ export default function App() {
         <ScrollView style={{marginTop: 25}}>
           {
             listInvestments.map((investElement) => (
-                <Box key={investElement.id} marginLeft={2} marginRight={2} marginBottom={2} bg={"purple.200"} padding={4} rounded={"2xl"}>
-                  <Text style={{fontSize: 20, fontWeight: "bold"}}>{investElement.stockName}</Text>
-                  <Text style={{fontSize: 16, fontWeight: "bold"}}>Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })} EUR</Text>
+                <Box key={investElement.id} marginLeft={2} marginRight={2} marginBottom={2} padding={1}>
+                  <LinearGradient colors={['#A76CF9', '#D196FF', '#FF8EF7']} start={{ x: 0.3, y: 0.3 }} end={{ x: 0.6, y: 1 }}  style={{borderRadius:10,  elevation: 7, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                    <Box p={5} > 
+                      <Text style={{fontSize: 20, fontWeight: "bold"}} mb={3} mt={1} color={"white"}>{investElement.stockName}</Text>
+
+                      <Box>
+                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+
+                      </Box>
+
+                      <Box mt={5}>
+                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Current worth : 
+                        {investElement.currentPriceOfStock &&
+                          (investElement.currentPriceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })
+                        }</Text>
+                      </Box>
+
+                    </Box>
+                  </LinearGradient>
                 </Box>
             ))
           }
