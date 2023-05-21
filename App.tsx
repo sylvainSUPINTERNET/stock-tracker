@@ -4,6 +4,7 @@ import React, { useEffect, useReducer, useState } from "react";
 import { firebaseConfig } from "./firebase/firebase";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { TouchableOpacity } from "react-native";
 
 const newColorTheme = {
   brand: {
@@ -29,7 +30,7 @@ const getCurrentPriceWorth = async (symbol:string) => {
 export default function App() {
 
 
-  const addCurrentStockWorth = async ( querySnapshot:QuerySnapshot<DocumentData> ) => {
+  const addCurrentStockWorth = async ( querySnapshot:any ) => {
 
     let investments = [...querySnapshot.docs.map( (doc:any) => doc.data())];
   
@@ -39,7 +40,9 @@ export default function App() {
       const resp = await fetch(stock.urlTrackDetail);
       const data = await resp.json();
       const currentPriceOfStock = data.quoteSummary.result[0].price.regularMarketPrice.raw;
-      updatedList[i] = { ...stock, currentPriceOfStock }; // Update the desired element
+      const percentChange = data.quoteSummary.result[0].price.regularMarketChange.fmt;
+    
+      updatedList[i] = { ...stock, currentPriceOfStock, percentChange }; // Update the desired element
     }
   
     setListInvestments(updatedList); // Set the state with the updated copy
@@ -88,7 +91,7 @@ export default function App() {
 
       await firebase.firestore()
       .collection("investments")
-      .doc(stockName)
+      .doc(symbol)
       .set({
         priceOfStock, // when bought
         stockName: symbol,
@@ -137,6 +140,10 @@ export default function App() {
     }
   }
   
+
+  const writeHistory = (ev:any) => {
+    console.log("endemol")
+  }
   
   useEffect (() => {
     firebase.initializeApp(firebaseConfig);
@@ -227,28 +234,42 @@ export default function App() {
         <Text textAlign="center" fontSize={"2xl"} style={{fontWeight: "bold"}}>No stock trackers for the moment ...</Text></Box> : 
         <ScrollView style={{marginTop: 25}}>
           {
-            listInvestments.map((investElement) => (
-                <Box key={investElement.id} marginLeft={2} marginRight={2} marginBottom={2} padding={1}>
-                  <LinearGradient colors={['#A76CF9', '#D196FF', '#FF8EF7']} start={{ x: 0.3, y: 0.3 }} end={{ x: 0.6, y: 1 }}  style={{borderRadius:10,  elevation: 7, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84}}>
-                    <Box p={5} > 
-                      <Text style={{fontSize: 20, fontWeight: "bold"}} mb={3} mt={1} color={"white"}>{investElement.stockName}</Text>
+            listInvestments.map((investElement, index:number) => (
+                  <Box key={"b1" + index} marginLeft={2} marginRight={2} marginBottom={2} padding={1}>
+                    <LinearGradient key={"view" + index} colors={['#A76CF9', '#D196FF', '#FF8EF7']} start={{ x: 0.3, y: 0.3 }} end={{ x: 0.6, y: 1 }}  style={{borderRadius:10,  elevation: 7, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                      <Box p={5} key={"b3"+index} > 
+                        <Text style={{fontSize: 20, fontWeight: "bold"}} mb={3} mt={1} color={"white"} key={"text1"+index}>{investElement.stockName}</Text>
 
-                      <Box>
-                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
-                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+                        <Box key={"b4"+index}>
+                          <Text key={"text2"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+                          <Text key={"text3"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+
+                        </Box>
+
+                        <Box mt={5} key={"b5"+index}>
+                          <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} key={"text4"+index}>Current worth : 
+                            {
+                              investElement.currentPriceOfStock &&
+                              (investElement.currentPriceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })
+                            }
+                          </Text>
+                          
+                          <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} mt={4}> 
+
+                            {investElement.percentChange && investElement.percentChange.includes("-") ? `📉${investElement.percentChange}%`: `📈${investElement.percentChange}%`}
+                          
+                          </Text>
+                        </Box>
 
                       </Box>
 
-                      <Box mt={5}>
-                        <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Current worth : 
-                        {investElement.currentPriceOfStock &&
-                          (investElement.currentPriceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })
-                        }</Text>
-                      </Box>
+                      <Button onPress={writeHistory}>
+                          Write history
+                      </Button>
 
-                    </Box>
-                  </LinearGradient>
-                </Box>
+                    </LinearGradient>
+                  </Box>
+
             ))
           }
         </ScrollView>
