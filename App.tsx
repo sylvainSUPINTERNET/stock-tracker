@@ -63,6 +63,9 @@ export default function App() {
   const [toInvest, setToInvest] = useState('');
 
 
+  const [harvested, setHarvested] = useState(0);
+
+
   // investments
   const [listInvestments, setListInvestments] = useState<any[]>([]);
 
@@ -152,6 +155,14 @@ export default function App() {
 
     const fetchData = async () => {
       try {
+
+        const harversterQueryResult = await firebase.firestore().collection("harvester").get();
+        if ( harversterQueryResult.size === 0 ) {
+          await firebase.firestore().collection("harvester").doc("harvester").set({"harvested" : 0});
+          setHarvested(0);
+        } else {
+          setHarvested(harversterQueryResult.docs[0].data().harvested);
+        }
         const querySnapshot = await firebase.firestore().collection("investments").get();
         addCurrentStockWorth(querySnapshot)
 
@@ -216,7 +227,12 @@ export default function App() {
             </Center>
         </Box>
       </LinearGradient>
-
+      
+      <Box mt={4} mb={4}>
+        <Text fontSize={16} p={4} fontWeight={"bold"}>Harvested : {harvested} USD
+        
+        TODO when update it's computed perte ou gain</Text>
+      </Box>
 
       <Box style={{display:"flex", justifyContent: "center", marginTop: 20}}>
         <Button style={{"marginRight": 80, marginLeft: 80}} variant="outline" onPress={addStock} colorScheme="primary">
@@ -258,8 +274,8 @@ export default function App() {
                           <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} mt={4}> 
                             
                             {investElement.percentChange && investElement.percentChange.includes("-") ?
-                             `📉${investElement.percentChange}% (${ parseFloat(investElement.investAmount) * (parseFloat(investElement.percentChange) / 100) }) ` :
-                             `📈${investElement.percentChange}% () `}
+                             `📉${investElement.percentChange}%  (${ - (parseFloat(investElement.priceOfStock) - parseFloat(investElement.currentPriceOfStock)).toFixed(2) } USD)` :
+                             `📈${investElement.percentChange}% (${ + (parseFloat(investElement.currentPriceOfStock) - parseFloat(investElement.priceOfStock)).toFixed(2) } USD)`}
                             
                           </Text>
                         </Box>
