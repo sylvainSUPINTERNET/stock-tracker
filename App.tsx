@@ -1,5 +1,5 @@
 import firebase from "firebase/compat";
-import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View, FormControl, Stack, Input, Container, Button, Icon, Modal, WarningOutlineIcon, Spinner, useToast, Card, ScrollView} from "native-base";
+import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View, FormControl, Stack, Input, Container, Button, Icon, Modal, WarningOutlineIcon, Spinner, useToast, Card, ScrollView } from "native-base";
 import React, { useEffect, useReducer, useState } from "react";
 import { firebaseConfig } from "./firebase/firebase";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +28,8 @@ const getCurrentPriceWorth = async (symbol:string) => {
 
 
 export default function App() {
+
+
 
 
   const addCurrentStockWorth = async ( querySnapshot:any ) => {
@@ -243,7 +245,6 @@ export default function App() {
                         <Box key={"b4"+index}>
                           <Text key={"text2"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
                           <Text key={"text3"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
-
                         </Box>
 
                         <Box mt={5} key={"b5"+index}>
@@ -255,13 +256,16 @@ export default function App() {
                           </Text>
                           
                           <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} mt={4}> 
-
-                            {investElement.percentChange && investElement.percentChange.includes("-") ? `📉${investElement.percentChange}%`: `📈${investElement.percentChange}%`}
-                          
+                            
+                            {investElement.percentChange && investElement.percentChange.includes("-") ?
+                             `📉${investElement.percentChange}% (${ parseFloat(investElement.investAmount) * (parseFloat(investElement.percentChange) / 100) }) ` :
+                             `📈${investElement.percentChange}% () `}
+                            
                           </Text>
                         </Box>
 
                       </Box>
+                      
 
                       <Button onPress={writeHistory}>
                           Write history
