@@ -101,7 +101,8 @@ export default function App() {
         priceOfStock, // when bought
         stockName: symbol,
         investAmount: toInvest,
-        urlTrackDetail: `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`
+        urlTrackDetail: `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`,
+        createdAt: new Date().toISOString()
       });
 
       setTimeout( async () => {
@@ -253,24 +254,57 @@ export default function App() {
         <ScrollView style={{marginTop: 25}}>
           {
             listInvestments.map((investElement, index:number) => (
+
                   <Box key={"b1" + index} marginLeft={2} marginRight={2} marginBottom={2} padding={1}>
                     <LinearGradient key={"view" + index} colors={['#A76CF9', '#D196FF', '#FF8EF7']} start={{ x: 0.3, y: 0.3 }} end={{ x: 0.6, y: 1 }}  style={{borderRadius:10,  elevation: 7, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84}}>
+                        {
+                          investElement.createdAt && Date.now() <= new Date(new Date(investElement.createdAt).getTime() + 1 *24*60*60*1000).getTime() &&
+                          <Box>
+                            <Text>
+                              Waiting 1 day to update
+                            </Text>
+                          </Box>
+                        }
                       <Box p={5} key={"b3"+index} > 
                         <Text style={{fontSize: 20, fontWeight: "bold"}} mb={3} mt={1} color={"white"} key={"text1"+index}>{investElement.stockName}</Text>
 
                         <Box key={"b4"+index}>
-                          <Text key={"text2"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+                          <Text key={"text2"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Initial Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
                           <Text key={"text3"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
                         </Box>
 
                         <Box mt={5} key={"b5"+index}>
+                            {
+                            investElement.percentChange && investElement.percentChange.includes("-") ?
+                              <Box key={"text6"+index} >
+                                <Text style={{fontSize: 20, fontWeight: "bold", color:"white"}}>
+                                Invested current value :
+                                </Text> 
+
+                                <Text style={{fontSize: 20, fontWeight: "bold", color:"red"}}>
+                                ${(parseFloat(investElement.investAmount) - (parseFloat(investElement.investAmount) * (parseFloat(investElement.percentChange.replace("-", "").replace("+", "")) / 100))).toFixed(2)} USD
+                                </Text> 
+                              </Box>
+                                :
+                              <Box key={"text6"+index} >
+                                <Text style={{fontSize: 20, fontWeight: "bold", color:"white"}}>
+                                Invested current value :
+                                </Text> 
+                                
+                                <Text style={{fontSize: 20, fontWeight: "bold", color:"green"}}>
+                                ${(parseFloat(investElement.investAmount) + (parseFloat(investElement.investAmount) * (parseFloat(investElement.percentChange.replace("-", "").replace("+", "")) / 100))).toFixed(2)} USD
+                                </Text> 
+                              </Box>
+                            }
+                            
+                            
                           <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} key={"text4"+index}>Current worth : 
                             {
                               investElement.currentPriceOfStock &&
                               (investElement.currentPriceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })
                             }
                           </Text>
-                          
+
                           <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} mt={4}> 
                             
                             {investElement.percentChange && investElement.percentChange.includes("-") ?
