@@ -55,13 +55,23 @@ export default function App() {
 
   const [showModal, setShowModal] = useState(false);
   const [isInvalidForm, setIsInvalidForm] = useState(false);
+
+  const [showModalInvest, setShowModalInvest] = useState(false);
+
+  const [showModalHarvest, setShowModalHarvest] = useState(false);
+
+
   const [justSubmited, setJustSubmited] = useState<undefined|boolean>(undefined);
-  
+
+  const [stockTarget, setStockTarget] = useState('');
+
+  const [showModalDelete, setShowModalDelete] = useState(false);
 
   // modal form
   const [stockName, setStockName] = useState('');
   const [toInvest, setToInvest] = useState('');
 
+  const [deleteStockName, setDeleteStockName] = useState('');
 
   const [harvested, setHarvested] = useState(0);
 
@@ -70,15 +80,49 @@ export default function App() {
   const [listInvestments, setListInvestments] = useState<any[]>([]);
 
 
+  const deleteStock = async ( investElement:any ) => {
+    setDeleteStockName(investElement.stockName);
+    setShowModalDelete(true);
+
+  }
+
+  const addInvestStock = (ev:any, investElement:any) => {
+    setShowModalInvest(true)
+    setStockTarget(investElement.stockName)
+  }
+
+  
+  const harvestStock = (ev:any, investElement:any) => {
+    setShowModalHarvest(true)
+    setStockTarget(investElement.stockName)
+  }
+
   const addStock = (ev:any) => {
     setShowModal(true);
   }
 
-  const handleSubmit = async (ev:any) => {
+  const handleSubmit = async (ev:any, action:"add_stock"|"add_invest"|"delete_stock"|"harvest_stock") => {
     
-    if ( toInvest === "" || stockName === "" ) {
-      setIsInvalidForm(true);
-      return;
+
+    if ( action === "add_stock" ) {
+      if ( toInvest === "" || stockName === "" ) {
+        setIsInvalidForm(true);
+        return;
+      }
+    }
+
+    if ( action === "add_invest" ) {
+      if ( toInvest === "") {
+        setIsInvalidForm(true);
+        return;
+      }
+    }
+
+    if ( action === "harvest_stock" ) {
+      if ( toInvest === "") {
+        setIsInvalidForm(true);
+        return;
+      }
     }
 
     if ( isInvalidForm ) {
@@ -88,42 +132,170 @@ export default function App() {
     setJustSubmited(true);
 
 
-    try {
-      const symbol = stockName.toUpperCase();
 
-      console.log(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`)
-      const priceOfStock = await getCurrentPriceWorth(symbol);
+    if ( action === "add_invest" ) { 
+    
+      try {
 
-      await firebase.firestore()
-      .collection("investments")
-      .doc(symbol)
-      .set({
-        priceOfStock, // when bought
-        stockName: symbol,
-        investAmount: toInvest,
-        urlTrackDetail: `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`,
-        createdAt: new Date().toISOString()
-      });
 
-      setTimeout( async () => {
+        const docRef = firebase.firestore().collection("investments").doc(stockTarget);
+        docRef.get().then( (doc:any) => console.log(doc.data()) );
 
-        setStockName("");
-        setToInvest("");
+        let doc = await docRef.get();
+        await docRef.update({
+          "investAmount" : toInvest,
+          "sharesAmount" : parseFloat(toInvest) / parseFloat(doc.data()!.priceOfStock)
+        });
 
-        setShowModal(false);
-        setJustSubmited(undefined);
 
+        setTimeout( async () => {
+  
+          setStockTarget("")
+          setToInvest("");
+
+          setShowModalInvest(false);
+          setJustSubmited(undefined);
+  
+          const querySnapshot = await firebase.firestore().collection("investments").get();
+          await addCurrentStockWorth(querySnapshot);
+
+        }, 1500);
+
+
+      } catch ( error ) {
+
+        setStockTarget("")
+        toast.show({
+          title: "Error",
+          description: "Error while adding stock : " + error
+        });
+      }
+    
+    } else if ( action === "add_stock" ) {
+
+      try {
+        const symbol = stockName.toUpperCase();
+  
+        console.log(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`)
+        const priceOfStock = await getCurrentPriceWorth(symbol);
+  
+        await firebase.firestore()
+        .collection("investments")
+        .doc(symbol)
+        .set({
+          priceOfStock, // when bought
+          stockName: symbol,
+          investAmount: toInvest,
+          urlTrackDetail: `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`,
+          createdAt: new Date().toISOString(),
+          sharesAmount: parseFloat(toInvest) / parseFloat(priceOfStock)
+        });
+  
+        setTimeout( async () => {
+  
+          setStockName("");
+          setToInvest("");
+  
+          setShowModal(false);
+          setJustSubmited(undefined);
+  
+          const querySnapshot = await firebase.firestore().collection("investments").get();
+          await addCurrentStockWorth(querySnapshot)
+        }, 1500);
+  
+      } catch ( error ) {
+        toast.show({
+          title: "Error",
+          description: "Error while adding stock : " + error
+        });
+  
+      }
+
+    } else if ( action === "delete_stock" ) {
+      
+      try {
+        await firebase.firestore().collection("investments").doc(deleteStockName).delete();
         const querySnapshot = await firebase.firestore().collection("investments").get();
-        await addCurrentStockWorth(querySnapshot)
-      }, 1500);
+        setDeleteStockName("")
+        setShowModalDelete(false)
 
-    } catch ( error ) {
-      toast.show({
-        title: "Error",
-        description: "Error while adding stock : " + error
-      });
+        addCurrentStockWorth(querySnapshot);
+  
+      } catch ( e ) {
+        setDeleteStockName("")
+        setShowModalDelete(false)
+        toast.show({
+          title: "Error",
+          description: "Error while deleting stock : " + e
+        });
+      }
+    
+    } else if ( action === "harvest_stock" ) {
+      let amountShareSold = toInvest;
 
+      try {
+        const docRef = firebase.firestore().collection("investments").doc(stockTarget);
+        docRef.get().then( (doc:any) => console.log(doc.data()) );
+
+        let doc = await docRef.get();
+
+        const newSharesAmount = parseFloat(doc.data()!.sharesAmount) - parseFloat(amountShareSold)
+
+        if ( newSharesAmount < 0 ) {
+          setIsInvalidForm(true);
+          return 
+        }
+
+        await docRef.update({
+          "sharesAmount" : parseFloat(newSharesAmount.toFixed(2))
+        });
+
+
+        setTimeout( async () => {
+  
+          setStockTarget("")
+          setToInvest("");
+
+          setShowModalHarvest(false);
+          setJustSubmited(undefined);
+
+          const symbol = stockTarget.toUpperCase(); 
+          console.log(`https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=price`)
+          const priceOfStock = await getCurrentPriceWorth(symbol);
+
+          let harvested =  parseFloat(amountShareSold) * priceOfStock
+          await firebase.firestore().collection("harvester").doc("harvester").set(
+            {
+              "harvested" : harvested
+            }
+          );
+          
+
+          const querySnapshot = await firebase.firestore().collection("investments").get();
+          await addCurrentStockWorth(querySnapshot);
+
+
+
+          setHarvested(harvested);
+
+        }, 1500);
+
+
+      } catch ( error ) {
+
+        setStockTarget("")
+        toast.show({
+          title: "Error",
+          description: "Error while adding stock : " + error
+        });
+      }
+      
+    } else {
+      console.log("not supported operation " + action);
     }
+
+
+
 
 
   }
@@ -147,9 +319,6 @@ export default function App() {
   }
   
 
-  const writeHistory = (ev:any) => {
-    console.log("endemol")
-  }
   
   useEffect (() => {
     firebase.initializeApp(firebaseConfig);
@@ -169,6 +338,7 @@ export default function App() {
 
 
       } catch ( e ) {
+
         toast.show({
           title: "Error",
           description: "Error while fetching data : " + e
@@ -208,7 +378,7 @@ export default function App() {
           </Modal.Body>
           <Modal.Footer>
             <Box bg={"purple.300"} flex={1}>
-              <Button onPress={handleSubmit} isDisabled={isInvalidForm || justSubmited}>
+              <Button onPress={ e => { handleSubmit(e,'add_stock') } } isDisabled={isInvalidForm || justSubmited}>
                 {
                   justSubmited ? <Spinner></Spinner> : <Text color={"white"}>Confirm</Text>
                 }
@@ -217,6 +387,90 @@ export default function App() {
           </Modal.Footer>
         </Modal.Content>
       </Modal>
+
+
+      <Modal isOpen={showModalInvest} onClose={() => setShowModalInvest(false)}>
+        <Modal.CloseButton style={{marginTop:120}}/>
+        <Modal.Content maxWidth="900px">
+          <Modal.Header >Stock</Modal.Header>
+          <Modal.Body>
+            <FormControl isInvalid={isInvalidForm}>
+              <Box style={{marginTop:15}}>
+                <Input variant="outline" placeholder="Amount" style={{fontSize:16}} value={toInvest}
+                onChange={(e:any) => getFormValue(e, "toInvest")}/>
+                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                  Must be valid price
+                </FormControl.ErrorMessage>
+              </Box>
+            </FormControl>
+          </Modal.Body>
+          <Modal.Footer>
+            <Box bg={"purple.300"} flex={1}>
+              <Button onPress={e => { handleSubmit(e,"add_invest")}} isDisabled={isInvalidForm || justSubmited}>
+                {
+                  justSubmited ? <Spinner></Spinner> : <Text color={"white"}>Confirm</Text>
+                }
+              </Button>
+            </Box>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+
+      <Modal isOpen={showModalDelete} onClose={() => {
+        setDeleteStockName("")
+        setShowModalDelete(false)
+        }}>
+        <Modal.CloseButton style={{marginTop:120}}/>
+        <Modal.Content maxWidth="900px">
+          <Modal.Header>Delete Stock</Modal.Header>
+          <Modal.Footer>
+            <Box bg={"purple.300"} flex={1}>
+              <Button onPress={e => { handleSubmit(e,"delete_stock")}}>
+                {
+                 <Text color={"white"}>Confirm</Text>
+                }
+              </Button>
+            </Box>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+
+      {/* <Modal isOpen={showModalHarvest} onClose={() => { */}
+      <Modal isOpen={showModalHarvest} onClose={() => {
+        setDeleteStockName("")
+        setShowModalHarvest(false)
+        }}>
+        <Modal.CloseButton style={{marginTop:120}}/>
+        <Modal.Content maxWidth="900px">
+          <Modal.Header>Harvest Stock</Modal.Header>
+          <Modal.Body>
+            <FormControl isInvalid={isInvalidForm}>
+              <Box style={{marginTop:15}}>
+                <Input variant="outline" placeholder="Shares sold" style={{fontSize:16}} value={toInvest}
+                onChange={(e:any) => getFormValue(e, "toInvest")}/>
+                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                  Must be valid price
+                </FormControl.ErrorMessage>
+              </Box>
+            </FormControl>
+          </Modal.Body>
+          <Modal.Footer>
+            <Box bg={"purple.300"} flex={1}>
+              <Button onPress={e => { handleSubmit(e,"harvest_stock")}} isDisabled={isInvalidForm || justSubmited}>
+                {
+                  justSubmited ? <Spinner></Spinner> : <Text color={"white"}>Confirm</Text>
+                }
+              </Button>
+            </Box>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+
+      
+
 
       <View style={{marginTop: 30}}>
 
@@ -230,9 +484,7 @@ export default function App() {
       </LinearGradient>
       
       <Box mt={4} mb={4}>
-        <Text fontSize={16} p={4} fontWeight={"bold"}>Harvested : {harvested} USD
-        
-        TODO when update it's computed perte ou gain</Text>
+        <Text fontSize={16} p={4} fontWeight={"bold"}>Harvested : {harvested.toLocaleString("fr-FR", { style: "currency", currency: "USD" })} USD</Text>
       </Box>
 
       <Box style={{display:"flex", justifyContent: "center", marginTop: 20}}>
@@ -271,6 +523,9 @@ export default function App() {
                         <Box key={"b4"+index}>
                           <Text key={"text2"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >Initial Invested : {(investElement.investAmount).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
                           <Text key={"text3"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} >When worth : {(investElement.priceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}</Text>
+                          <Text  style={{fontSize: 20, fontWeight: "bold"}} color={"white"} key={"textxeeed"+index}>
+                            Shares amount : {investElement.sharesAmount.toFixed(2)} {investElement.stockName}
+                            </Text>
                         </Box>
 
                         <Box mt={5} key={"b5"+index}>
@@ -305,6 +560,10 @@ export default function App() {
                             }
                           </Text>
 
+                          <Text  style={{fontSize: 20, fontWeight: "bold"}} color={"white"} key={"textxd"+index}>
+                            Value (shares) : {(investElement.sharesAmount * investElement.currentPriceOfStock).toLocaleString("fr-FR", { style: "currency", currency: "USD" })}
+                          </Text>
+
                           <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} mt={4}> 
                             
                             {investElement.percentChange && investElement.percentChange.includes("-") ?
@@ -316,10 +575,19 @@ export default function App() {
 
                       </Box>
                       
+                      
+                      <View style={{ flexDirection: 'row' }}>
+                        <View style={{flex: 1}}>
+                          <Button onPress={ e => deleteStock(investElement)} m={0.5}>Delete</Button>
+                        </View>
+                        <View style={{flex: 1}}>
+                          <Button onPress={e => { addInvestStock(e, investElement)} } m={0.5}>Invest</Button>
+                        </View>
+                        <View style={{flex: 1}}>
+                          <Button onPress={ e => { harvestStock(e,investElement) }} m={0.5}>Harvest</Button>
+                        </View>
+                      </View>
 
-                      <Button onPress={writeHistory}>
-                          Write history
-                      </Button>
 
                     </LinearGradient>
                   </Box>
