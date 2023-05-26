@@ -529,7 +529,7 @@ export default function App() {
                         </Box>
 
                         <Box mt={5} key={"b5"+index}>
-                            {
+                            {/* {
                             investElement.percentChange && investElement.percentChange.includes("-") ?
                               <Box key={"text6"+index} >
                                 <Text style={{fontSize: 20, fontWeight: "bold", color:"white"}}>
@@ -550,7 +550,7 @@ export default function App() {
                                 ${(parseFloat(investElement.investAmount) + (parseFloat(investElement.investAmount) * (parseFloat(investElement.percentChange.replace("-", "").replace("+", "")) / 100))).toFixed(2)} USD
                                 </Text> 
                               </Box>
-                            }
+                            } */}
                             
                             
                           <Text style={{fontSize: 20, fontWeight: "bold"}} color={"white"} key={"text4"+index}>Current worth : 
