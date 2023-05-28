@@ -507,6 +507,7 @@ export default function App() {
           {
             listInvestments.map((investElement, index:number) => (
 
+              
                   <Box key={"b1" + index} marginLeft={2} marginRight={2} marginBottom={2} padding={1}>
                     <LinearGradient key={"view" + index} colors={['#A76CF9', '#D196FF', '#FF8EF7']} start={{ x: 0.3, y: 0.3 }} end={{ x: 0.6, y: 1 }}  style={{borderRadius:10,  elevation: 7, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84}}>
                         {
@@ -518,9 +519,10 @@ export default function App() {
                           </Box>
                         }
                       <Box p={5} key={"b3"+index} > 
-                        
+                      
 
-                        <View style={{ flexDirection: "row", justifyContent:"center", backgroundColor:"black", padding: 15, borderRadius: 10, borderColor: 'purple', borderWidth: 2  }} mb={5}>
+
+                        <View style={{ flexDirection: "row", justifyContent:"center", backgroundColor:"black", padding: 15, borderRadius: 10, borderColor: 'purple', borderWidth: 2  }} mb={2}>
                           <Text style={{fontSize: 20, fontWeight: "bold"}}  color={"white"} key={"text1"+index} mr={5}>{investElement.stockName}</Text>
                           <Text key={"text5"+index} style={{fontSize: 20, fontWeight: "bold"}} color={"white"} > 
                               {investElement.percentChange && investElement.percentChange.includes("-") ?
@@ -531,14 +533,16 @@ export default function App() {
 
                         <View style={{ backgroundColor:"black", padding: 15, borderRadius: 10, borderColor: 'purple', borderWidth: 2  }} mb={5}>
 
-                          <Box mb={5}>
+                          <View bg={"purple.600"} p={2} rounded={10} mb={5} flexDirection={"row"} justifyContent={"center"} borderWidth={2} borderColor={"purple.800"}>
                             <Text color={"white"} style={{fontSize: 20, fontWeight: "bold"}}>
                               Current
                             </Text>
-                          </Box>
+                          </View>
 
-                          <View p={3}>
-                            <Box style={{flexDirection: "row",  justifyContent:"space-between"}} mt={3}>
+
+
+                          <View p={1}>
+                            <Box style={{flexDirection: "row",  justifyContent:"space-between"}} mt={1}>
                             <Text style={{fontSize: 20, fontWeight: "bold"}}  color={"white"} key={"c"+index} >
                                 Worth
                               </Text>
@@ -559,16 +563,28 @@ export default function App() {
                             </Box>
                           </View>
 
+                          <View style={{flex: 1}} mt={2}>
+                            <Button bg={"green.500"} borderWidth={2} borderColor={"green.600"} onPress={e => { addInvestStock(e, investElement)} } m={0.5}>
+                              <Text fontSize={20} color={"white"} fontWeight={"bold"}>Update</Text>
+                            </Button>
+                          </View>
+                          
+                          <View style={{flex: 1}}>
+                            <Button bg={"yellow.400"} borderWidth={2} borderColor={"yellow.600"} onPress={ e => { harvestStock(e,investElement) }} m={0.5}>
+                              <Text fontSize={20} color={"black"} fontWeight={"bold"}>Harvest</Text>
+                            </Button>
+                          </View>
+
                         </View>
 
 
                         <View style={{ backgroundColor:"black", padding: 15, borderRadius: 10, borderColor: 'purple', borderWidth: 2  }} mb={5}>
 
-                          <Box mb={5}>
+                          <View bg={"purple.600"} p={2} rounded={10} mb={5} flexDirection={"row"} justifyContent={"center"} borderWidth={2} borderColor={"purple.800"}>
                             <Text color={"white"} style={{fontSize: 20, fontWeight: "bold"}}>
                               History
                             </Text>
-                          </Box>
+                          </View>
 
                           <View p={3}>
                             <Box style={{flexDirection: "row", justifyContent:"space-between"}}>
@@ -598,22 +614,19 @@ export default function App() {
                             </Box>
                           </View>
 
+                          
+
                         </View>
 
+                        <View mb={2}>
+                          <Button bg={"red.500"} borderWidth={2} borderColor={"red.600"} onPress={ e => deleteStock(investElement)} m={0.5}>
+                            <Text fontSize={20} color={"white"} fontWeight={"bold"}>Delete stock</Text>
+                          </Button>
+                        </View>
+                        
                       </Box>
                       
-                      
-                      <View style={{ flexDirection: 'row' }}>
-                        <View style={{flex: 1}}>
-                          <Button style={{backgroundColor:"#3c005a"}} onPress={ e => deleteStock(investElement)} m={0.5}>Delete</Button>
-                        </View>
-                        <View style={{flex: 1}}>
-                          <Button onPress={e => { addInvestStock(e, investElement)} } m={0.5}>Invest</Button>
-                        </View>
-                        <View style={{flex: 1}}>
-                          <Button onPress={ e => { harvestStock(e,investElement) }} m={0.5}>Harvest</Button>
-                        </View>
-                      </View>
+                    
 
 
                     </LinearGradient>
