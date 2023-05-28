@@ -1,5 +1,5 @@
 import firebase from "firebase/compat";
-import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View, FormControl, Stack, Input, Container, Button, Icon, Modal, WarningOutlineIcon, Spinner, useToast, Card, ScrollView } from "native-base";
+import { NativeBaseProvider, extendTheme, Center, Box, HStack, Text, View, FormControl, Stack, Input, Container, Button, Icon, Modal, WarningOutlineIcon, Spinner, useToast, Card, ScrollView, Badge } from "native-base";
 import React, { useEffect, useReducer, useState } from "react";
 import { firebaseConfig } from "./firebase/firebase";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -489,17 +489,16 @@ export default function App() {
           <Text fontSize={20} p={4} fontWeight={"bold"} color={"black"}>
             GAIN : {harvested.toLocaleString("fr-FR", { style: "currency", currency: "USD" })}
           </Text>
-          <Input variant="outline" placeholder="Stock name ( Symbol ) " style={{fontSize:16}} value={stockName}
-                onChange={(e:any) => getFormValue(e, "stockName")}/>
             <TouchableOpacity onPress={ (e:any) => {
               console.log("oh boi")
             }}>
-              <Box>
+              {/* <Box>
                 <Icon as={Ionicons} name="pencil" color={"blue.900"} size={6}/>
-              </Box>
+              </Box> */}
             </TouchableOpacity>
       </View>
 
+      
 
       <Box style={{display:"flex", justifyContent: "center", marginTop: 20}}>
           <Button style={{"marginRight": 80, marginLeft: 80}} variant="outline" onPress={addStock} colorScheme="primary">
@@ -527,9 +526,7 @@ export default function App() {
                         {
                           investElement.createdAt && Date.now() <= new Date(new Date(investElement.createdAt).getTime() + 1 *24*60*60*1000).getTime() &&
                           <Box>
-                            <Text>
-                              Waiting 1 day to update
-                            </Text>
+                            <Badge colorScheme="success">NEW !</Badge>
                           </Box>
                         }
                       <Box p={5} key={"b3"+index} > 
@@ -579,7 +576,7 @@ export default function App() {
 
                           <View style={{flex: 1}} mt={2}>
                             <Button bg={"green.500"} borderWidth={2} borderColor={"green.600"} onPress={e => { addInvestStock(e, investElement)} } m={0.5}>
-                              <Text fontSize={20} color={"white"} fontWeight={"bold"}>Update</Text>
+                              <Text fontSize={20} color={"white"} fontWeight={"bold"}>Update shares</Text>
                             </Button>
                           </View>
                           
