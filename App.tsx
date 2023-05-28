@@ -4,7 +4,7 @@ import React, { useEffect, useReducer, useState } from "react";
 import { firebaseConfig } from "./firebase/firebase";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import { TouchableOpacity } from "react-native";
+import { Touchable, TouchableOpacity } from "react-native";
 
 const newColorTheme = {
   brand: {
@@ -483,19 +483,33 @@ export default function App() {
         </Box>
       </LinearGradient>
       
-      <Box mt={4} mb={4}>
-        <Text fontSize={16} p={4} fontWeight={"bold"}>Harvested : {harvested.toLocaleString("fr-FR", { style: "currency", currency: "USD" })} USD</Text>
-      </Box>
+
+
+      <View style={{justifyContent:"center", flexDirection:"row", alignItems:"center"}}>
+          <Text fontSize={20} p={4} fontWeight={"bold"} color={"black"}>
+            GAIN : {harvested.toLocaleString("fr-FR", { style: "currency", currency: "USD" })}
+          </Text>
+          <Input variant="outline" placeholder="Stock name ( Symbol ) " style={{fontSize:16}} value={stockName}
+                onChange={(e:any) => getFormValue(e, "stockName")}/>
+            <TouchableOpacity onPress={ (e:any) => {
+              console.log("oh boi")
+            }}>
+              <Box>
+                <Icon as={Ionicons} name="pencil" color={"blue.900"} size={6}/>
+              </Box>
+            </TouchableOpacity>
+      </View>
+
 
       <Box style={{display:"flex", justifyContent: "center", marginTop: 20}}>
-        <Button style={{"marginRight": 80, marginLeft: 80}} variant="outline" onPress={addStock} colorScheme="primary">
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Icon as={Ionicons} name="add" color={"blue.900"} size={6}/>
-            <Text style={{ fontSize: 16, color: '#3461eb', fontWeight: 'bold', marginLeft: 3 }}>
-              STOCK
-            </Text>
-          </View>
-        </Button>
+          <Button style={{"marginRight": 80, marginLeft: 80}} variant="outline" onPress={addStock} colorScheme="primary">
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon as={Ionicons} name="add" color={"blue.900"} size={6}/>
+              <Text style={{ fontSize: 16, color: '#3461eb', fontWeight: 'bold', marginLeft: 3 }}>
+                STOCK
+              </Text>
+            </View>
+          </Button>
       </Box>
       </View>
 
